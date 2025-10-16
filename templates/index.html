@@ -9,6 +9,7 @@
         .container { max-width: 800px; margin: 40px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h1 { color: #2c3e50; }
         textarea { width: 98%; height: 200px; margin-top: 10px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
+        input[type="file"] { margin-top: 10px; }
         button { display: block; width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; }
         button:hover { background-color: #2980b9; }
     </style>
@@ -16,12 +17,14 @@
 <body>
     <div class="container">
         <h1>ATS-Align 🚀</h1>
-        <p>Paste your resume and the job description below to see how well they match.</p>
+        <p>Upload your resume and paste the job description below to see how well they match.</p>
 
-        <form action="/" method="POST">
-            <label for="resume"><b>Your Resume:</b></label><br>
-            <textarea id="resume" name="resume" required></textarea>
+        <form action="/" method="POST" enctype="multipart/form-data">
+
+            <label for="resume"><b>Upload Your Resume (.pdf, .docx):</b></label><br>
+            <input type="file" id="resume" name="resume" accept=".pdf,.docx" required>
             <br><br>
+
             <label for="job_description"><b>Job Description:</b></label><br>
             <textarea id="job_description" name="job_description" required></textarea>
             <br>
