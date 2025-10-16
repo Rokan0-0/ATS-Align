@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - ATS-Align</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: 40px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2 { color: #2c3e50; }
+        .results-summary { font-size: 1.2em; margin-bottom: 20px; }
+        .keyword-list { list-style-type: none; padding: 0; }
+        .keyword-list li { padding: 8px; margin-bottom: 5px; border-radius: 4px; }
+        .missing { background-color: #fbeaea; border-left: 4px solid #e74c3c; } /* Red for missing */
+        .found { background-color: #eafaf1; border-left: 4px solid #2ecc71; } /* Green for found */
+        a.button { display: inline-block; text-align: center; width: 150px; padding: 12px; background-color: #3498db; color: white; border-radius: 4px; text-decoration: none; margin-top: 20px; }
+        a.button:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analysis Complete!</h1>
+        <p class="results-summary">
+            Your resume contains <strong>{{ found_count }}</strong> out of <strong>{{ total_count }}</strong> key terms from the job description.
+        </p>
+
+        <h2>Missing Keywords</h2>
+        <p>Consider adding these terms to your resume to improve your match score:</p>
+        <ul class="keyword-list">
+            {% for keyword in missing_keywords %}
+                <li class="missing">{{ keyword }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Found Keywords ✅</h2>
+        <p>Great job including these terms:</p>
+        <ul class="keyword-list">
+            {% for keyword in found_keywords %}
+                <li class="found">{{ keyword }}</li>
+            {% endfor %}
+        </ul>
+
+        <a href="/" class="button">Analyze Another</a>
+    </div>
+</body>
+</html>
