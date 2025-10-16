@@ -21,7 +21,7 @@ def extract_text_from_pdf(file_stream):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        # --- NEW FILE HANDLING LOGIC ---
+        # --- FILE HANDLING LOGIC ---
         resume_file = request.files['resume']
         job_description_text = request.form['job_description']
         
@@ -36,16 +36,25 @@ def home():
             else:
                 # Handle unsupported file type
                 return "Error: Please upload a .pdf or .docx file.", 400
+        else:
+            # Handle case where no file is uploaded
+            return "Error: Please upload a resume file.", 400
 
-        # --- THE REST IS THE SAME ---
+        # --- ANALYSIS & SCORE CALCULATION ---
         found, missing = analyze_resume(resume_text, job_description_text)
 
+        total_count = len(found) + len(missing)
+        # Avoid division by zero if no keywords are found
+        match_score = int((len(found) / total_count) * 100) if total_count > 0 else 0
+
+        # Pass all results to the results.html page
         return render_template(
             'results.html',
             found_keywords=sorted(found),
             missing_keywords=sorted(missing),
             found_count=len(found),
-            total_count=len(found) + len(missing)
+            total_count=total_count,
+            score=match_score
         )
 
     return render_template('index.html')
