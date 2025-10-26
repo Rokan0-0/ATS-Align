@@ -1,16 +1,22 @@
-from flask import Flask, render_template, request
+from flask import Flask, request, jsonify
+from flask_cors import CORS  # Import CORS
 from analyzer import analyze_resume
-import docx  # For reading .docx files
-import fitz  # PyMuPDF, for reading .pdf files
+import docx
+import fitz
+import os # Good to import this for later
 
 app = Flask(__name__)
 
-# Helper function to extract text from a .docx file
+# Set up CORS. This tells the browser to allow
+# requests from our frontend (http://localhost:3000)
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+
+# --- Helper functions for text extraction ---
+# (These are unchanged)
 def extract_text_from_docx(file_stream):
     doc = docx.Document(file_stream)
     return "\n".join([para.text for para in doc.paragraphs])
 
-# Helper function to extract text from a .pdf file
 def extract_text_from_pdf(file_stream):
     doc = fitz.open(stream=file_stream.read(), filetype="pdf")
     text = ""
@@ -18,46 +24,59 @@ def extract_text_from_pdf(file_stream):
         text += page.get_text()
     return text
 
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        # --- FILE HANDLING LOGIC ---
+# --- NEW: The Main API Route ---
+@app.route('/api/analyze', methods=['POST'])
+def analyze_api():
+    """
+    This is the new API endpoint. It receives a file and form data,
+    and returns a JSON response.
+    """
+    try:
+        # Check if the 'resume' file is in the request
+        if 'resume' not in request.files:
+            return jsonify({"error": "No resume file part"}), 400
+
         resume_file = request.files['resume']
+        # Get the job description from the form data
         job_description_text = request.form['job_description']
-        
+
         resume_text = ""
-        # Check if a file was uploaded and has a filename
         if resume_file and resume_file.filename != '':
-            # Check the file extension
             if resume_file.filename.endswith('.pdf'):
                 resume_text = extract_text_from_pdf(resume_file.stream)
             elif resume_file.filename.endswith('.docx'):
                 resume_text = extract_text_from_docx(resume_file.stream)
             else:
-                # Handle unsupported file type
-                return "Error: Please upload a .pdf or .docx file.", 400
+                return jsonify({"error": "Unsupported file type"}), 400
         else:
-            # Handle case where no file is uploaded
-            return "Error: Please upload a resume file.", 400
+            return jsonify({"error": "No resume file selected"}), 400
 
         # --- ANALYSIS & SCORE CALCULATION ---
         found, missing = analyze_resume(resume_text, job_description_text)
-
         total_count = len(found) + len(missing)
-        # Avoid division by zero if no keywords are found
         match_score = int((len(found) / total_count) * 100) if total_count > 0 else 0
 
-        # Pass all results to the results.html page
-        return render_template(
-            'results.html',
-            found_keywords=sorted(found),
-            missing_keywords=sorted(missing),
-            found_count=len(found),
-            total_count=total_count,
-            score=match_score
-        )
+        # --- THE NEW JSON RESPONSE ---
+        # This is what we send back to the React frontend
+        return jsonify({
+            "success": True,
+            "score": match_score,
+            "found_keywords": sorted(found),
+            "missing_keywords": sorted(missing),
+            "found_count": len(found),
+            "total_count": total_count
+        })
 
-    return render_template('index.html')
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# A simple route to check if the API is running
+@app.route('/')
+def index():
+    return "<h1>ATS-Align Backend API</h1><p>The API is running. Connect from your frontend.</p>"
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run on port 5000 (React will be on 3000)
+    app.run(debug=True, port=5000)
