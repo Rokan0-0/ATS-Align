@@ -1,0 +1,273 @@
+Step 2: Create the pages Directory
+This is the standard way to organize a multi-page React app.
+
+In your frontend/src folder, create a new folder named pages.
+
+Find your main landing page file. This is most likely frontend/src/App.tsx.
+
+Move frontend/src/App.tsx into the new pages folder.
+
+Rename it to frontend/src/pages/LandingPage.tsx.
+
+Step 3: Create the New "App Page" (with API Logic)
+Now, we'll create the new page for our tool. This is where we'll add all the API logic.
+
+Create a new file named frontend/src/pages/AppPage.tsx.
+
+Paste the following code into this new file. This code includes:
+
+The form to upload files.
+
+The API fetch logic to talk to your backend.
+
+The logic to display the results.
+
+TypeScript
+
+// File: frontend/src/pages/AppPage.tsx
+import React, { useState } from 'react';
+
+// Define the shape of our API response
+interface AnalysisResult {
+  score: number;
+  found_count: number;
+  total_count: number;
+  missing_keywords: string[];
+  found_keywords: string[];
+}
+
+// --- Results Component ---
+// A simple component to display the results on the same page
+interface ResultsProps {
+  result: AnalysisResult;
+  onReset: () => void;
+}
+
+const Results: React.FC<ResultsProps> = ({ result, onReset }) => (
+  <div className="w-full max-w-4xl p-8 bg-white rounded-lg shadow-md border border-gray-200 mt-8">
+    <h2 className="text-3xl font-bold text-gray-900 text-center">Analysis Complete!</h2>
+    <div className="my-8 text-center">
+      <h3 className="text-xl font-semibold text-gray-700">Your Match Score</h3>
+      <div className="text-7xl font-bold" style={{color: '#364F6B'}}>{result.score}%</div>
+      <p className="text-lg text-gray-600">
+        Your resume contains <strong>{result.found_count}</strong> out of <strong>{result.total_count}</strong> key terms.
+      </p>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div>
+        <h4 className="text-xl font-semibold text-red-600 mb-4">Missing Keywords 🚩</h4>
+        <ul className="list-none p-0">
+          {result.missing_keywords.map((keyword) => (
+            <li key={keyword} className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md mb-2 text-sm">
+              {keyword}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <h4 className="text-xl font-semibold text-green-600 mb-4">Found Keywords ✅</h4>
+        <ul className="list-none p-0">
+          {result.found_keywords.map((keyword) => (
+            <li key={keyword} className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-md mb-2 text-sm">
+              {keyword}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+    <div className="text-center mt-10">
+      <button
+        onClick={onReset}
+        className="px-8 py-3 text-white font-semibold rounded-lg shadow-md transition duration-300"
+        style={{backgroundColor: '#364F6B'}}
+      >
+        Analyze Another
+      </button>
+    </div>
+  </div>
+);
+
+// --- Main App Page Component ---
+const AppPage: React.FC = () => {
+  const [jobDescription, setJobDescription] = useState("");
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setResumeFile(event.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!resumeFile) {
+      setError("Please upload a resume file.");
+      return;
+    }
+    
+    setIsLoading(true);
+    setAnalysisResult(null);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('resume', resumeFile);
+    formData.append('job_description', jobDescription);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/analyze', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAnalysisResult(data);
+      } else {
+        setError(`Error: ${data.error}`);
+      }
+    } catch (err) {
+      setError("An error occurred. Make sure the backend server is running.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleReset = () => {
+    setAnalysisResult(null);
+    setJobDescription("");
+    setResumeFile(null);
+    // This resets the file input field
+    const fileInput = document.getElementById('resume-file-input') as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* We can add the <Navigation /> component back here later */}
+      
+      <main className="flex-grow flex flex-col items-center justify-center py-12 px-4">
+        {!analysisResult ? (
+          // --- FORM VIEW ---
+          <div className="w-full max-w-4xl p-8 bg-white rounded-lg shadow-md border border-gray-200">
+            <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">Free ATS Analyzer</h1>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="resume-file-input" className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Your Resume (.pdf, .docx):
+                </label>
+                <input
+                  type="file"
+                  id="resume-file-input"
+                  name="resume"
+                  accept=".pdf,.docx"
+                  onChange={handleFileChange}
+                  required
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="job_description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Paste Job Description:
+                </label>
+                <textarea
+                  id="job_description"
+                  name="job_description"
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  required
+                  rows={15}
+                  className="w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              
+              {error && (
+                <div className="text-red-600 text-sm text-center">{error}</div>
+              )}
+              
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-6 text-white font-semibold rounded-lg shadow-md transition duration-300 disabled:opacity-50"
+                style={{backgroundColor: '#10B981'}}
+              >
+                {isLoading ? "Analyzing..." : "Analyze Now"}
+              </button>
+            </form>
+          </div>
+        ) : (
+          // --- RESULTS VIEW ---
+          <Results result={analysisResult} onReset={handleReset} />
+        )}
+      </main>
+
+      {/* We can add the <Footer /> component back here later */}
+    </div>
+  );
+};
+
+export default AppPage;
+Step 4: Create the Main Router
+Now we need to tell our app how to switch between the landing page and the app page.
+
+Create a new file named frontend/src/App.tsx. (This is safe because we already moved the original).
+
+Paste this code into the new frontend/src/App.tsx. This file will be our new "main" file.
+
+TypeScript
+
+// File: frontend/src/App.tsx
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// Import our two pages
+import LandingPage from './pages/LandingPage';
+import AppPage from './pages/AppPage';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/app" element={<AppPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+Step 5: Connect Your Landing Page
+This is the final step. We need to make the "Try the Free Analyzer" buttons on your landing page actually go to our new /app page.
+
+Open your landing page file: frontend/src/pages/LandingPage.tsx.
+
+At the very top, add this import statement:
+
+TypeScript
+
+import { Link } from 'react-router-dom';
+Find every "Try the Free Analyzer" button in that file. It will look like an <a> tag.
+
+You need to replace the <a> tag with a <Link> tag.
+
+Change This:
+
+TypeScript
+
+<a href="#pricing">Try the Free Analyzer</a> 
+(Or whatever href it has)
+
+To This:
+
+TypeScript
+
+<Link to="/app">Try the Free Analyzer</Link>

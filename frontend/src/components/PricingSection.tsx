@@ -1,7 +1,11 @@
 import { Button } from "./ui/button";
 import { Check, Sparkles } from "lucide-react";
 
-export function PricingSection() {
+interface PricingSectionProps {
+  onNavigateToTool?: () => void;
+}
+
+export function PricingSection({ onNavigateToTool }: PricingSectionProps) {
   return (
     <section id="pricing" className="py-24 px-6 lg:px-8 bg-[#F7F9FC]">
       <div className="max-w-7xl mx-auto">
@@ -45,7 +49,8 @@ export function PricingSection() {
             {/* CTA Button */}
             <Button 
               size="lg" 
-              variant="outline" 
+              variant="outline"
+              onClick={onNavigateToTool}
               className="w-full border-2 border-[#364F6B] text-[#364F6B] hover:bg-[#364F6B] hover:text-white py-6 text-lg"
             >
               Try for Free

@@ -1,7 +1,11 @@
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 
-export function HeroSection() {
+interface HeroSectionProps {
+  onNavigateToTool?: () => void;
+}
+
+export function HeroSection({ onNavigateToTool }: HeroSectionProps) {
   return (
     <section className="pt-32 pb-20 px-6 lg:px-8 bg-gradient-to-b from-white to-[#F7F9FC]">
       <div className="max-w-7xl mx-auto">
@@ -26,6 +30,7 @@ export function HeroSection() {
               <Button 
                 size="lg" 
                 variant="outline" 
+                onClick={onNavigateToTool}
                 className="border-[#364F6B] text-[#364F6B] hover:bg-[#364F6B] hover:text-white px-8 py-6 text-lg"
               >
                 Try the Free Analyzer
