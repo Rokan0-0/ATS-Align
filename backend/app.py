@@ -1,6 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # Import CORS
-from .analyzer import analyze_resume
+import sys
+if __name__ == "__main__" and __package__ is None:
+    # Allow running as script: fallback to absolute import
+    from analyzer import analyze_resume
+else:
+    from .analyzer import analyze_resume
 import docx
 import fitz
 import os # Good to import this for later

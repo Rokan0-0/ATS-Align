@@ -21,6 +21,10 @@ except Exception:
 
 __all__ = ["app"]
 
+# For local development, this file can be run directly.
+# The `-m` flag is preferred, but this provides a simple alternative.
+# Example: `python app.py` from the project root.
 if __name__ == "__main__":
-    # Run locally for quick smoke tests
+    # Use the imported app object from backend.app
+    # The host '0.0.0.0' makes the server accessible on your local network
     app.run(host="0.0.0.0", port=5000, debug=True)
